@@ -1,0 +1,149 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #222;
+    margin: 0;
+}
+
+header {
+    background-color: #1f3b63;
+    color: white;
+    padding: 15px 25px;
+}
+
+header h1 {
+    margin: 0 0 4px 0;
+    font-size: 20px;
+}
+
+header p {
+    margin: 0 0 10px 0;
+    font-size: 13px;
+}
+
+.botones-top {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+main {
+    max-width: 960px;
+    margin: 18px auto;
+    padding: 0 15px;
+}
+
+.caja {
+    background: white;
+    border: 1px solid #ccc;
+    padding: 14px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+
+.caja h2, .caja h3 {
+    margin-top: 0;
+    color: #1f3b63;
+}
+
+.nota {
+    font-size: 12px;
+    color: #555;
+    margin-top: 0;
+}
+
+#grafo {
+    width: 100%;
+    height: auto;
+    border: 1px solid #ddd;
+    background: #fafafa;
+}
+
+.menu-tabs {
+    margin-bottom: 12px;
+}
+
+.menu-tabs button {
+    margin-right: 6px;
+    background-color: #334e73;
+}
+
+.dos-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 6px 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #eee;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+form.linea {
+    flex-direction: row;
+}
+
+label {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+input, select {
+    padding: 6px;
+    border: 1px solid #bbb;
+    border-radius: 3px;
+}
+
+button {
+    padding: 7px 12px;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.btn-rojo {
+    background-color: #c0392b;
+}
+
+.mensaje {
+    padding: 10px;
+    margin-bottom: 12px;
+    border-radius: 4px;
+    background-color: #e8f5e9;
+    border: 1px solid #4caf50;
+}
+
+.mensaje.error {
+    background-color: #fdecea;
+    border-color: #e74c3c;
+}
+
+.resultado {
+    margin-top: 10px;
+    font-size: 13px;
+}
+
+hr {
+    margin: 12px 0;
+    border: none;
+    border-top: 1px solid #ddd;
+}
