@@ -7,7 +7,7 @@
 - Proyecto: Parcial 2 - Integracion de Aplicacion Python y Frontend Web con Neo4j AuraDB
 
 ## Descripcion General
-Aplicacion web (Flask + HTML/CSS/JavaScript) y de consola en Python conectada a una instancia administrada en la nube de Neo4j AuraDB (modelo de grafos). Permite administrar estudiantes, materias, cursos aprobados por periodo y colaboraciones en proyectos academicos, garantizando unicidad mediante restricciones (`CREATE CONSTRAINT`) en Neo4j, visualizando el grafo en vivo en el navegador y ejecutando consultas de vecindad para recomendar asesores y busqueda de caminos mas cortos (`shortestPath`).
+Aplicacion web (Flask + HTML/CSS/JavaScript) y de consola en Python conectada a una instancia administrada en la nube de Neo4j AuraDB (modelo de grafos). Permite administrar estudiantes, materias, cursos aprobados por periodo y colaboraciones en proyectos academicos, garantizando unicidad mediante restricciones (`CREATE CONSTRAINT`) en Neo4j, visualizando el grafo en vivo en el navegador y ejecutando consultas de vecindad para recomendar asesores y busqueda de caminos mas cortos (`allShortestPaths`).
 
 ## Requisitos Previos
 - Python 3.10 o superior instalado en el sistema.
@@ -62,7 +62,7 @@ python main.py
 - `app.py`: Servidor web Flask que sirve la interfaz HTML y expone los endpoints REST (`/api/grafo`, `/api/estudiantes`, `/api/materias`, `/api/cursos`, `/api/colaboraciones`, `/api/asesores`, `/api/camino`, `/api/seed`).
 - `templates/index.html`: Interfaz web principal con visualizador SVG del grafo en vivo, tablas de catalogo, historial por estudiante, formularios CRUD y consultas especializadas.
 - `static/estilos.css`: Hoja de estilos limpia de la interfaz web.
-- `static/app.js`: Logica del frontend en JavaScript para consumir la API, renderizar el grafo y resaltar rutas `shortestPath`.
+- `static/app.js`: Logica del frontend en JavaScript para consumir la API, renderizar el grafo y resaltar rutas `allShortestPaths`.
 - `conexion.py`: Carga las variables de entorno desde `.env`, inicializa el driver oficial de Neo4j, verifica la conectividad y cierra la sesion de forma segura.
 - `seed.py`: Script de carga inicial que limpia la base, define restricciones `UNIQUE` sobre `Estudiante.matricula` y `Materia.codigo`, e inserta los 6 estudiantes, 4 materias, relaciones `:CURSO` y relaciones `:COLABORO_CON` mediante consultas Cypher parametrizadas.
 - `operaciones.py`: Capa compartida de acceso a Neo4j con las operaciones CRUD completas (sin sobrescribir cursos de periodos anteriores ni colaboraciones de proyectos distintos) y las dos consultas especializadas de grafos.

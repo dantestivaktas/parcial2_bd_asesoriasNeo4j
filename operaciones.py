@@ -284,7 +284,8 @@ def eliminar_curso(driver, matricula, codigo, periodo=""):
             res = list(sesion.run(consulta, matricula=matricula, codigo=codigo, periodo=periodo))
         if not res:
             return False, "No se encontro ese curso registrado."
-        return True, "Curso dado de baja: " + res[0]["mat"] + " para " + res[0]["est"]
+        texto_periodo = " (Periodo: " + periodo + ")" if periodo else " (todos los periodos)"
+        return True, "Se dio de baja el curso " + res[0]["mat"] + texto_periodo + " para el estudiante " + res[0]["est"]
     except Exception as error:
         return False, "Error al dar de baja curso: " + str(error)
 
@@ -340,7 +341,7 @@ def recomendar_asesores(driver, mi_matricula, codigo):
         return False, "Error al buscar asesores: " + str(error), None
 
 
-# Consulta especializada 2: camino mas corto entre dos estudiantes con shortestPath
+# Consulta especializada 2: camino mas corto entre dos estudiantes con allShortestPaths
 def buscar_camino_mas_corto(driver, origen, destino):
     origen = str(origen).strip()
     destino = str(destino).strip()
@@ -349,7 +350,11 @@ def buscar_camino_mas_corto(driver, origen, destino):
 
     consulta = (
         "MATCH (e1:Estudiante {matricula: $origen}), (e2:Estudiante {matricula: $destino}) "
-        "MATCH camino = shortestPath((e1)-[:COLABORO_CON|CURSO*1..6]-(e2)) "
+        "MATCH camino = allShortestPaths((e1)-[:COLABORO_CON|CURSO*1..6]-(e2)) "
+        "WITH e1, e2, camino, "
+        "size([r IN relationships(camino) WHERE type(r) = 'COLABORO_CON']) AS colabs "
+        "ORDER BY colabs DESC, [n IN nodes(camino) | coalesce(n.matricula, n.codigo)] ASC "
+        "LIMIT 1 "
         "RETURN e1.nombre AS n1, e2.nombre AS n2, length(camino) AS saltos, "
         "[n IN nodes(camino) | {tipo: labels(n)[0], nombre: n.nombre, id: coalesce(n.matricula, n.codigo)}] AS nodos, "
         "[r IN relationships(camino) | {tipo: type(r), proyecto: r.proyecto, calificacion: r.calificacion}] AS relaciones"
