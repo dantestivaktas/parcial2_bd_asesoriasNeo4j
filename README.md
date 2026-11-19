@@ -33,6 +33,7 @@ NEO4J_PASSWORD=tu_password
 NEO4J_DATABASE=tu_base
 AURA_INSTANCEID=tu_instance_id
 AURA_INSTANCENAME=Free instance
+SEED_TOKEN=cambia_este_token_seguro
 ```
 
 El archivo `.env` esta incluido en `.gitignore` para evitar subir credenciales o identificadores de infraestructura al repositorio.
@@ -64,7 +65,7 @@ python main.py
 - `static/estilos.css`: Hoja de estilos limpia de la interfaz web.
 - `static/app.js`: Logica del frontend en JavaScript para consumir la API, renderizar el grafo y resaltar rutas `allShortestPaths`.
 - `conexion.py`: Carga las variables de entorno desde `.env`, inicializa el driver oficial de Neo4j, verifica la conectividad y cierra la sesion de forma segura.
-- `seed.py`: Script de carga inicial que limpia la base, define restricciones `UNIQUE` sobre `Estudiante.matricula` y `Materia.codigo`, e inserta los 6 estudiantes, 4 materias, relaciones `:CURSO` y relaciones `:COLABORO_CON` mediante consultas Cypher parametrizadas.
+- `seed.py`: Script de carga inicial que limpia la base, define restricciones `UNIQUE` sobre `Estudiante.matricula`, `Materia.codigo`, `Carrera.nombre` y `Area.nombre`, e inserta los 6 estudiantes, 4 materias, 1 carrera, 4 areas, relaciones `:CURSO`, `:COLABORO_CON`, `:PERTENECE_A` y `:PERTENECE_AL_AREA` mediante transacciones `execute_write` parametrizadas.
 - `operaciones.py`: Capa compartida de acceso a Neo4j con las operaciones CRUD completas (sin sobrescribir cursos de periodos anteriores ni colaboraciones de proyectos distintos) y las dos consultas especializadas de grafos.
 - `main.py`: Interfaz de consola alternativa con menu numerado para ejecutar cada operacion contra Neo4j AuraDB.
 - `requirements.txt`: Lista de dependencias del proyecto (`neo4j`, `python-dotenv` y `flask`).

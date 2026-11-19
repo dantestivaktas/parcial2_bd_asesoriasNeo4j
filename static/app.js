@@ -68,11 +68,14 @@ function dibujarGrafo() {
     let estudiantes = [];
     let materias = [];
 
+    let nodosSvg = [];
     for (let i = 0; i < grafoActual.nodos.length; i++) {
         if (grafoActual.nodos[i].tipo === "Estudiante") {
             estudiantes.push(grafoActual.nodos[i]);
-        } else {
+            nodosSvg.push(grafoActual.nodos[i]);
+        } else if (grafoActual.nodos[i].tipo === "Materia") {
             materias.push(grafoActual.nodos[i]);
+            nodosSvg.push(grafoActual.nodos[i]);
         }
     }
 
@@ -103,8 +106,8 @@ function dibujarGrafo() {
         html += '<line x1="' + p1.x + '" y1="' + p1.y + '" x2="' + p2.x + '" y2="' + p2.y + '" stroke="' + color + '" stroke-width="' + grosor + '" />';
     }
 
-    for (let i = 0; i < grafoActual.nodos.length; i++) {
-        let n = grafoActual.nodos[i];
+    for (let i = 0; i < nodosSvg.length; i++) {
+        let n = nodosSvg[i];
         let p = pos[n.id];
         let enRuta = rutaNodos.indexOf(n.id) !== -1;
         let fill = enRuta ? "#fdebd0" : (n.tipo === "Estudiante" ? "#dbeafe" : "#d1fae5");
@@ -135,9 +138,14 @@ async function cargarGrafo() {
 
 async function reiniciarSeed() {
     if (!confirm("Reiniciar la base con los datos iniciales?")) return;
+    let token = prompt("Ingresa el SEED_TOKEN de seguridad:");
+    if (!token) return;
     let resp = await fetch("/api/seed", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            "X-Seed-Token": token.trim()
+        },
         body: JSON.stringify({ confirmar: true })
     });
     let datos = await resp.json();
@@ -193,7 +201,8 @@ async function buscarCamino(e) {
     e.preventDefault();
     let origen = document.getElementById("cam-origen").value;
     let destino = document.getElementById("cam-destino").value;
-    let resp = await fetch("/api/camino?origen=" + origen + "&destino=" + destino);
+    let inc = document.getElementById("cam-materias").checked ? "1" : "0";
+    let resp = await fetch("/api/camino?origen=" + origen + "&destino=" + destino + "&incluir_materias=" + inc);
     let res = await resp.json();
     let div = document.getElementById("res-camino");
     if (!res.ok) {

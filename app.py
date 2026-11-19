@@ -40,15 +40,16 @@ def api_grafo():
     )
 
 
-# Reiniciar los datos iniciales en la nube (requiere confirmacion y token opcional)
+# Reiniciar los datos iniciales en la nube (exige SEED_TOKEN obligatorio y confirmacion)
 @app.route("/api/seed", methods=["POST"])
 def api_seed():
     datos = request.get_json(silent=True) or {}
     token_env = os.getenv("SEED_TOKEN", "").strip()
-    if token_env:
-        token_req = request.headers.get("X-Seed-Token", datos.get("token", "")).strip()
-        if token_req != token_env:
-            return jsonify({"ok": False, "mensaje": "Token de autorizacion invalido para reiniciar la base."}), 403
+    if not token_env:
+        return jsonify({"ok": False, "mensaje": "SEED_TOKEN no esta configurado en el servidor."}), 503
+    token_req = request.headers.get("X-Seed-Token", datos.get("token", "")).strip()
+    if token_req != token_env:
+        return jsonify({"ok": False, "mensaje": "Token de autorizacion invalido o faltante."}), 403
     if datos.get("confirmar") is not True:
         return jsonify({"ok": False, "mensaje": "Se requiere confirmar=true en el cuerpo JSON para reiniciar la base."}), 400
     cargar_datos_iniciales(get_driver())
@@ -155,8 +156,9 @@ def api_asesores():
 # Consulta 2: camino mas corto entre dos estudiantes
 @app.route("/api/camino", methods=["GET"])
 def api_camino():
+    incluir = request.args.get("incluir_materias", "0") == "1"
     ok, msg, datos = op.buscar_camino_mas_corto(
-        get_driver(), request.args.get("origen", ""), request.args.get("destino", "")
+        get_driver(), request.args.get("origen", ""), request.args.get("destino", ""), incluir
     )
     return jsonify({"ok": ok, "mensaje": msg, "datos": datos}), (200 if ok else 400)
 

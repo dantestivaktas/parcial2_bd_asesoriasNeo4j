@@ -1,15 +1,62 @@
 from conexion import conectar_bd, obtener_nombre_bd, cerrar_bd
 
 
+# Ejecutar la carga inicial dentro de transacciones gestionadas en la nube
+def _crear_esquema(tx):
+    tx.run("CREATE CONSTRAINT IF NOT EXISTS FOR (e:Estudiante) REQUIRE e.matricula IS UNIQUE")
+    tx.run("CREATE CONSTRAINT IF NOT EXISTS FOR (m:Materia) REQUIRE m.codigo IS UNIQUE")
+    tx.run("CREATE CONSTRAINT IF NOT EXISTS FOR (c:Carrera) REQUIRE c.nombre IS UNIQUE")
+    tx.run("CREATE CONSTRAINT IF NOT EXISTS FOR (a:Area) REQUIRE a.nombre IS UNIQUE")
+
+
+def _insertar_datos(tx, estudiantes, materias, cursos, colaboraciones):
+    tx.run("MATCH (n) DETACH DELETE n")
+
+    for mat, nom, car, sem in estudiantes:
+        tx.run(
+            "MERGE (c:Carrera {nombre: $carrera}) "
+            "MERGE (e:Estudiante {matricula: $matricula}) "
+            "SET e.nombre = $nombre, e.semestre = $semestre "
+            "MERGE (e)-[:PERTENECE_A]->(c)",
+            matricula=mat, nombre=nom, carrera=car, semestre=sem,
+        )
+
+    for cod, nom, area in materias:
+        tx.run(
+            "MERGE (a:Area {nombre: $area}) "
+            "MERGE (m:Materia {codigo: $codigo}) "
+            "SET m.nombre = $nombre "
+            "MERGE (m)-[:PERTENECE_AL_AREA]->(a)",
+            codigo=cod, nombre=nom, area=area,
+        )
+
+    for mat, cod, calif, per in cursos:
+        tx.run(
+            "MATCH (e:Estudiante {matricula: $matricula}), (m:Materia {codigo: $codigo}) "
+            "MERGE (e)-[r:CURSO {periodo: $periodo}]->(m) "
+            "SET r.calificacion = $calificacion",
+            matricula=mat, codigo=cod, calificacion=calif, periodo=per,
+        )
+
+    for m1, m2, proy in colaboraciones:
+        if m1 > m2:
+            m1, m2 = m2, m1
+        tx.run(
+            "MATCH (e1:Estudiante {matricula: $m1}), (e2:Estudiante {matricula: $m2}) "
+            "MERGE (e1)-[:COLABORO_CON {proyecto: $proyecto}]->(e2)",
+            m1=m1, m2=m2, proyecto=proy,
+        )
+
+
 # Borrar datos anteriores, crear restricciones y cargar nodos de prueba
 def cargar_datos_iniciales(driver):
     estudiantes = [
-        ("00548126", "Dante Stivaktas", "Ingenieria en TI", 5),
-        ("00548201", "Ana Lopez", "Ingenieria en TI", 5),
-        ("00548202", "Carlos Perez", "Ingenieria en TI", 6),
-        ("00548203", "Sofia Ramirez", "Ingenieria en TI", 6),
-        ("00548204", "Mateo Hernandez", "Ingenieria en TI", 5),
-        ("00548205", "Diego Morales", "Ingenieria en TI", 3),
+        ("00548126", "Dante Stivaktas", "Ingeniería en TI", 5),
+        ("00548201", "Ana Lopez", "Ingeniería en TI", 5),
+        ("00548202", "Carlos Perez", "Ingeniería en TI", 6),
+        ("00548203", "Sofia Ramirez", "Ingeniería en TI", 6),
+        ("00548204", "Mateo Hernandez", "Ingeniería en TI", 5),
+        ("00548205", "Diego Morales", "Ingeniería en TI", 3),
     ]
 
     materias = [
@@ -41,40 +88,8 @@ def cargar_datos_iniciales(driver):
 
     try:
         with driver.session(database=obtener_nombre_bd()) as sesion:
-            # Limpiar el grafo antes de cargar
-            sesion.run("MATCH (n) DETACH DELETE n")
-
-            # Restricciones para no repetir matriculas ni codigos
-            sesion.run("CREATE CONSTRAINT IF NOT EXISTS FOR (e:Estudiante) REQUIRE e.matricula IS UNIQUE")
-            sesion.run("CREATE CONSTRAINT IF NOT EXISTS FOR (m:Materia) REQUIRE m.codigo IS UNIQUE")
-
-            for mat, nom, car, sem in estudiantes:
-                sesion.run(
-                    "MERGE (e:Estudiante {matricula: $matricula}) "
-                    "SET e.nombre = $nombre, e.carrera = $carrera, e.semestre = $semestre",
-                    matricula=mat, nombre=nom, carrera=car, semestre=sem,
-                )
-
-            for cod, nom, area in materias:
-                sesion.run(
-                    "MERGE (m:Materia {codigo: $codigo}) SET m.nombre = $nombre, m.area = $area",
-                    codigo=cod, nombre=nom, area=area,
-                )
-
-            for mat, cod, calif, per in cursos:
-                sesion.run(
-                    "MATCH (e:Estudiante {matricula: $matricula}), (m:Materia {codigo: $codigo}) "
-                    "MERGE (e)-[r:CURSO {periodo: $periodo}]->(m) SET r.calificacion = $calificacion",
-                    matricula=mat, codigo=cod, calificacion=calif, periodo=per,
-                )
-
-            for m1, m2, proy in colaboraciones:
-                sesion.run(
-                    "MATCH (e1:Estudiante {matricula: $m1}), (e2:Estudiante {matricula: $m2}) "
-                    "MERGE (e1)-[:COLABORO_CON {proyecto: $proyecto}]->(e2)",
-                    m1=m1, m2=m2, proyecto=proy,
-                )
-
+            sesion.execute_write(_crear_esquema)
+            sesion.execute_write(_insertar_datos, estudiantes, materias, cursos, colaboraciones)
         print("Datos iniciales cargados correctamente.")
     except Exception as error:
         print("Error al cargar datos iniciales:", error)

@@ -135,7 +135,8 @@ def main():
             elif opcion == "9":
                 origen = input("Matricula origen: ")
                 destino = input("Matricula destino: ")
-                ok, msg, datos = op.buscar_camino_mas_corto(driver, origen, destino)
+                inc = input("Incluir materias (:CURSO) ademas de red social? (s/N): ").strip().lower() == "s"
+                ok, msg, datos = op.buscar_camino_mas_corto(driver, origen, destino, inc)
                 if not ok:
                     print(msg)
                 else:
