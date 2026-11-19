@@ -2,205 +2,342 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Red Academica y Asesorias TI - Neo4j AuraDB</title>
     <link rel="stylesheet" href="/static/estilos.css">
 </head>
 <body>
-    <header>
-        <h1>Sistema de Asesorias Academicas TI (Neo4j AuraDB)</h1>
-        <p>Bases de Datos Avanzadas | Dante Stivaktas (00548126)</p>
-        <div class="botones-top">
-            <span id="estado">Cargando conexion...</span>
-            <button onclick="cargarDatos()">Actualizar Tablas</button>
-            <button class="peligro" onclick="reiniciarSeed()">Reiniciar Datos Iniciales (Seed)</button>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="brand">
+                <h1>Red Academica y Asesorias TI</h1>
+                <p>Neo4j AuraDB + Flask | Bases de Datos Avanzadas &middot; Dante Stivaktas (00548126)</p>
+            </div>
+            <div class="topbar-actions">
+                <span id="estado" class="status-pill">Conectando...</span>
+                <button class="btn btn-sec" onclick="cargarDatos()">Actualizar</button>
+                <button class="btn btn-danger-outline" onclick="reiniciarSeed()">Reiniciar Seed</button>
+            </div>
         </div>
     </header>
 
-    <main>
-        <div id="mensaje" class="mensaje" style="display:none;"></div>
+    <main class="container">
+        <div id="mensaje" class="alerta" style="display:none;"></div>
 
-        <nav class="menu-tabs">
-            <button onclick="mostrarSeccion('sec-datos')">1. Tablas del Grafo e Historial</button>
-            <button onclick="mostrarSeccion('sec-consultas')">2. Consultas de Grafos (Asesores y Ruta)</button>
-            <button onclick="mostrarSeccion('sec-crud')">3. Operaciones CRUD</button>
+        <!-- Tarjetas de resumen del grafo -->
+        <section class="stats-grid">
+            <div class="stat-card accent-blue">
+                <span class="stat-label">Estudiantes</span>
+                <strong class="stat-num" id="cnt-est">0</strong>
+                <span class="stat-tag">:Estudiante</span>
+            </div>
+            <div class="stat-card accent-green">
+                <span class="stat-label">Materias</span>
+                <strong class="stat-num" id="cnt-mat">0</strong>
+                <span class="stat-tag">:Materia</span>
+            </div>
+            <div class="stat-card accent-indigo">
+                <span class="stat-label">Cursos Registrados</span>
+                <strong class="stat-num" id="cnt-cur">0</strong>
+                <span class="stat-tag">:CURSO</span>
+            </div>
+            <div class="stat-card accent-purple">
+                <span class="stat-label">Colaboraciones</span>
+                <strong class="stat-num" id="cnt-col">0</strong>
+                <span class="stat-tag">:COLABORO_CON</span>
+            </div>
+        </section>
+
+        <!-- Barra de navegacion por pestanas -->
+        <nav class="tabs">
+            <button id="tab-sec-datos" class="tab-btn activo" onclick="mostrarSeccion('sec-datos')">Tablas del Grafo e Historial</button>
+            <button id="tab-sec-consultas" class="tab-btn" onclick="mostrarSeccion('sec-consultas')">Consultas de Grafos (Asesores y Ruta)</button>
+            <button id="tab-sec-crud" class="tab-btn" onclick="mostrarSeccion('sec-crud')">Operaciones CRUD</button>
         </nav>
 
-        <!-- PESTAÑA 1: TABLAS DE NODOS, RELACIONES E HISTORIAL -->
+        <!-- PESTANA 1: TABLAS DE NODOS, RELACIONES E HISTORIAL -->
         <section id="sec-datos" class="seccion">
-            <div class="dos-cols">
-                <div class="caja">
-                    <h3>Nodos :Estudiante</h3>
-                    <table>
-                        <thead>
-                            <tr><th>Matricula</th><th>Nombre</th><th>Carrera</th><th>Sem.</th></tr>
-                        </thead>
-                        <tbody id="tabla-estudiantes"></tbody>
-                    </table>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Estudiantes Registrados</h3>
+                        <span class="badge badge-blue">:Estudiante</span>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr><th>Matricula</th><th>Nombre</th><th>Carrera</th><th>Sem.</th></tr>
+                            </thead>
+                            <tbody id="tabla-estudiantes"></tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div class="caja">
-                    <h3>Nodos :Materia</h3>
-                    <table>
-                        <thead>
-                            <tr><th>Codigo</th><th>Nombre</th></tr>
-                        </thead>
-                        <tbody id="tabla-materias"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="dos-cols">
-                <div class="caja">
-                    <h3>Relaciones :CURSO (Materias Cursadas)</h3>
-                    <table>
-                        <thead>
-                            <tr><th>Estudiante</th><th>Materia</th><th>Calif.</th><th>Periodo</th></tr>
-                        </thead>
-                        <tbody id="tabla-cursos"></tbody>
-                    </table>
-                </div>
-
-                <div class="caja">
-                    <h3>Relaciones :COLABORO_CON (Proyectos)</h3>
-                    <table>
-                        <thead>
-                            <tr><th>Estudiante 1</th><th>Estudiante 2</th><th>Proyecto</th></tr>
-                        </thead>
-                        <tbody id="tabla-colaboraciones"></tbody>
-                    </table>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Catalogo de Materias</h3>
+                        <span class="badge badge-green">:Materia</span>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr><th>Codigo</th><th>Nombre de la Materia</th></tr>
+                            </thead>
+                            <tbody id="tabla-materias"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            <div class="caja">
-                <h3>Consultar Historial Individual de un Estudiante</h3>
-                <form onsubmit="verHistorial(event)" class="linea">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Materias Cursadas</h3>
+                        <span class="badge badge-indigo">:CURSO</span>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr><th>Estudiante</th><th>Materia</th><th>Calif.</th><th>Periodo</th></tr>
+                            </thead>
+                            <tbody id="tabla-cursos"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Colaboraciones en Proyectos</h3>
+                        <span class="badge badge-purple">:COLABORO_CON</span>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr><th>Estudiante 1</th><th>Estudiante 2</th><th>Proyecto</th></tr>
+                            </thead>
+                            <tbody id="tabla-colaboraciones"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Consultar Historial Individual</h3>
+                    <span class="badge badge-slate">READ por Matricula</span>
+                </div>
+                <form onsubmit="verHistorial(event)" class="form-inline">
                     <select id="hist-mat"></select>
-                    <button type="submit">Ver Historial</button>
+                    <button type="submit" class="btn btn-primary">Ver Historial</button>
                 </form>
                 <div id="res-historial" class="resultado"></div>
             </div>
         </section>
 
-        <!-- PESTAÑA 2: CONSULTAS ESPECIALIZADAS -->
+        <!-- PESTANA 2: CONSULTAS ESPECIALIZADAS -->
         <section id="sec-consultas" class="seccion" style="display:none;">
-            <div class="dos-cols">
-                <div class="caja">
-                    <h3>Consulta 1: Recomendar Asesores (Calificacion &gt;= 9)</h3>
-                    <form onsubmit="buscarAsesores(event)">
-                        <label>Estudiante que solicita asesoria:</label>
-                        <select id="ase-mat"></select>
-                        <label>Materia:</label>
-                        <select id="ase-cod"></select>
-                        <button type="submit">Buscar Asesores</button>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Consulta 1: Recomendar Asesores</h3>
+                        <span class="badge badge-green">Calif. &gt;= 9</span>
+                    </div>
+                    <p class="card-desc">Busca companeros con calificacion mayor o igual a 9 en la materia y muestra si ya colaboraron antes o tienen materias en comun.</p>
+                    <form onsubmit="buscarAsesores(event)" class="form-stack">
+                        <div class="field">
+                            <label for="ase-mat">Estudiante que solicita asesoria</label>
+                            <select id="ase-mat"></select>
+                        </div>
+                        <div class="field">
+                            <label for="ase-cod">Materia en la que necesita apoyo</label>
+                            <select id="ase-cod"></select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Buscar Asesores Recomendados</button>
                     </form>
                     <div id="res-asesores" class="resultado"></div>
                 </div>
 
-                <div class="caja">
-                    <h3>Consulta 2: Camino Mas Corto (shortestPath)</h3>
-                    <form onsubmit="buscarCamino(event)">
-                        <label>Estudiante Origen:</label>
-                        <select id="cam-origen"></select>
-                        <label>Estudiante Destino:</label>
-                        <select id="cam-destino"></select>
-                        <button type="submit">Calcular Ruta Mas Corta</button>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Consulta 2: Camino Mas Corto</h3>
+                        <span class="badge badge-purple">shortestPath (*1..4)</span>
+                    </div>
+                    <p class="card-desc">Encuentra la cadena de conexion mas corta (de 1 a 4 saltos) entre dos estudiantes recorriendo colaboraciones y materias compartidas.</p>
+                    <form onsubmit="buscarCamino(event)" class="form-stack">
+                        <div class="field">
+                            <label for="cam-origen">Estudiante origen</label>
+                            <select id="cam-origen"></select>
+                        </div>
+                        <div class="field">
+                            <label for="cam-destino">Estudiante destino</label>
+                            <select id="cam-destino"></select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Calcular Ruta Mas Corta</button>
                     </form>
                     <div id="res-camino" class="resultado"></div>
                 </div>
             </div>
         </section>
 
-        <!-- PESTAÑA 3: OPERACIONES CRUD -->
+        <!-- PESTANA 3: OPERACIONES CRUD -->
         <section id="sec-crud" class="seccion" style="display:none;">
-            <div class="dos-cols">
-                <div class="caja">
-                    <h3>Guardar Estudiante (:Estudiante)</h3>
-                    <form onsubmit="guardarEstudiante(event)">
-                        <label>Matricula:</label>
-                        <input id="est-mat" placeholder="00548299" required>
-                        <label>Nombre:</label>
-                        <input id="est-nom" placeholder="Luis Torres" required>
-                        <label>Carrera:</label>
-                        <input id="est-car" value="Ingeniería en TI" required>
-                        <label>Semestre (1 a 12):</label>
-                        <input id="est-sem" type="number" value="5" min="1" max="12" required>
-                        <button type="submit">Guardar Estudiante</button>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Guardar Estudiante</h3>
+                        <span class="badge badge-blue">CREATE / MERGE</span>
+                    </div>
+                    <form onsubmit="guardarEstudiante(event)" class="form-stack">
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="est-mat">Matricula (UNIQUE)</label>
+                                <input id="est-mat" placeholder="00548299" required>
+                            </div>
+                            <div class="field">
+                                <label for="est-sem">Semestre (1 a 12)</label>
+                                <input id="est-sem" type="number" value="5" min="1" max="12" required>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="est-nom">Nombre completo</label>
+                            <input id="est-nom" placeholder="Luis Torres" required>
+                        </div>
+                        <div class="field">
+                            <label for="est-car">Carrera</label>
+                            <input id="est-car" value="Ingeniería en TI" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Estudiante</button>
                     </form>
                 </div>
 
-                <div class="caja">
-                    <h3>Guardar Materia (:Materia)</h3>
-                    <form onsubmit="guardarMateria(event)">
-                        <label>Codigo:</label>
-                        <input id="mat-cod" placeholder="IA205" required>
-                        <label>Nombre:</label>
-                        <input id="mat-nom" placeholder="Inteligencia Artificial" required>
-                        <button type="submit">Guardar Materia</button>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Guardar Materia</h3>
+                        <span class="badge badge-green">CREATE / MERGE</span>
+                    </div>
+                    <form onsubmit="guardarMateria(event)" class="form-stack">
+                        <div class="field">
+                            <label for="mat-cod">Codigo (UNIQUE)</label>
+                            <input id="mat-cod" placeholder="IA205" required>
+                        </div>
+                        <div class="field">
+                            <label for="mat-nom">Nombre de la materia</label>
+                            <input id="mat-nom" placeholder="Inteligencia Artificial" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Materia</button>
                     </form>
                 </div>
 
-                <div class="caja">
-                    <h3>Registrar Curso (:CURSO)</h3>
-                    <form onsubmit="registrarCurso(event)">
-                        <label>Estudiante:</label>
-                        <select id="cur-mat"></select>
-                        <label>Materia:</label>
-                        <select id="cur-cod"></select>
-                        <label>Calificacion (0 a 10):</label>
-                        <input id="cur-cal" type="number" value="9" min="0" max="10" required>
-                        <label>Periodo:</label>
-                        <input id="cur-per" value="2026-1" required>
-                        <button type="submit">Registrar Curso</button>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Registrar Curso</h3>
+                        <span class="badge badge-indigo">CREATE :CURSO</span>
+                    </div>
+                    <form onsubmit="registrarCurso(event)" class="form-stack">
+                        <div class="field">
+                            <label for="cur-mat">Estudiante</label>
+                            <select id="cur-mat"></select>
+                        </div>
+                        <div class="field">
+                            <label for="cur-cod">Materia</label>
+                            <select id="cur-cod"></select>
+                        </div>
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="cur-cal">Calificacion (0 a 10)</label>
+                                <input id="cur-cal" type="number" value="9" min="0" max="10" required>
+                            </div>
+                            <div class="field">
+                                <label for="cur-per">Periodo</label>
+                                <input id="cur-per" value="2026-1" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Registrar Curso</button>
                     </form>
                 </div>
 
-                <div class="caja">
-                    <h3>Registrar o Eliminar Colaboracion (:COLABORO_CON)</h3>
-                    <form onsubmit="registrarColab(event)">
-                        <label>Estudiante 1:</label>
-                        <select id="col-m1"></select>
-                        <label>Estudiante 2:</label>
-                        <select id="col-m2"></select>
-                        <label>Proyecto:</label>
-                        <input id="col-proy" placeholder="Chatbot Academico" required>
-                        <button type="submit">Guardar Colaboracion</button>
-                        <button type="button" class="peligro" onclick="eliminarColab()">Eliminar Colaboracion</button>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Colaboracion en Proyecto</h3>
+                        <span class="badge badge-purple">:COLABORO_CON</span>
+                    </div>
+                    <form onsubmit="registrarColab(event)" class="form-stack">
+                        <div class="field">
+                            <label for="col-m1">Estudiante 1</label>
+                            <select id="col-m1"></select>
+                        </div>
+                        <div class="field">
+                            <label for="col-m2">Estudiante 2</label>
+                            <select id="col-m2"></select>
+                        </div>
+                        <div class="field">
+                            <label for="col-proy">Nombre del proyecto</label>
+                            <input id="col-proy" placeholder="Chatbot Academico" required>
+                        </div>
+                        <div class="btn-row">
+                            <button type="submit" class="btn btn-primary">Guardar Colaboracion</button>
+                            <button type="button" class="btn btn-danger" onclick="eliminarColab()">Eliminar Colaboracion</button>
+                        </div>
                     </form>
                 </div>
 
-                <div class="caja">
-                    <h3>Actualizar Semestre o Calificacion (UPDATE)</h3>
-                    <form onsubmit="actualizarSemestre(event)">
-                        <label>Estudiante (nuevo semestre):</label>
-                        <select id="act-est-mat"></select>
-                        <input id="act-est-sem" type="number" value="6" min="1" max="12" required>
-                        <button type="submit">Actualizar Semestre</button>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Actualizar Datos</h3>
+                        <span class="badge badge-amber">UPDATE</span>
+                    </div>
+                    <form onsubmit="actualizarSemestre(event)" class="form-stack">
+                        <div class="field">
+                            <label for="act-est-mat">Cambiar semestre de estudiante</label>
+                            <div class="field-row">
+                                <select id="act-est-mat"></select>
+                                <input id="act-est-sem" type="number" value="6" min="1" max="12" required style="max-width:100px;">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Actualizar Semestre</button>
                     </form>
-                    <hr>
-                    <form onsubmit="actualizarCalif(event)">
-                        <label>Actualizar Calificacion de Curso:</label>
-                        <select id="act-cur-mat"></select>
-                        <select id="act-cur-cod"></select>
-                        <input id="act-cur-per" value="2026-1" placeholder="Periodo" required>
-                        <input id="act-cur-cal" type="number" value="10" min="0" max="10" required>
-                        <button type="submit">Actualizar Calificacion</button>
+                    <hr class="divider">
+                    <form onsubmit="actualizarCalif(event)" class="form-stack">
+                        <div class="field">
+                            <label>Actualizar calificacion de curso (:CURSO)</label>
+                            <select id="act-cur-mat"></select>
+                        </div>
+                        <div class="field">
+                            <select id="act-cur-cod"></select>
+                        </div>
+                        <div class="field-row">
+                            <input id="act-cur-per" value="2026-1" placeholder="Periodo" required>
+                            <input id="act-cur-cal" type="number" value="10" min="0" max="10" required style="max-width:100px;">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Actualizar Calificacion</button>
                     </form>
                 </div>
 
-                <div class="caja">
-                    <h3>Baja de Curso o Eliminar Estudiante (DELETE)</h3>
-                    <form onsubmit="bajaCurso(event)">
-                        <label>Dar de baja relacion :CURSO por periodo:</label>
-                        <select id="del-cur-mat"></select>
-                        <select id="del-cur-cod"></select>
-                        <input id="del-cur-per" value="2026-1" placeholder="Periodo" required>
-                        <button type="submit" class="peligro">Dar de Baja Curso</button>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Bajas y Eliminacion</h3>
+                        <span class="badge badge-red">DELETE</span>
+                    </div>
+                    <form onsubmit="bajaCurso(event)" class="form-stack">
+                        <div class="field">
+                            <label>Dar de baja relacion :CURSO por periodo</label>
+                            <select id="del-cur-mat"></select>
+                        </div>
+                        <div class="field">
+                            <select id="del-cur-cod"></select>
+                        </div>
+                        <div class="field">
+                            <input id="del-cur-per" value="2026-1" placeholder="Periodo" required>
+                        </div>
+                        <button type="submit" class="btn btn-danger">Dar de Baja Curso</button>
                     </form>
-                    <hr>
-                    <form onsubmit="borrarEstudiante(event)">
-                        <label>Eliminar Estudiante (DETACH DELETE):</label>
-                        <select id="del-est-mat"></select>
-                        <button type="submit" class="peligro">Eliminar Estudiante</button>
+                    <hr class="divider">
+                    <form onsubmit="borrarEstudiante(event)" class="form-stack">
+                        <div class="field">
+                            <label for="del-est-mat">Eliminar estudiante (DETACH DELETE)</label>
+                            <select id="del-est-mat"></select>
+                        </div>
+                        <button type="submit" class="btn btn-danger">Eliminar Estudiante</button>
                     </form>
                 </div>
             </div>

@@ -41,41 +41,56 @@ def cargar_datos_iniciales(driver):
 
     try:
         with driver.session(database=obtener_nombre_bd()) as sesion:
-            sesion.run("MATCH (n) DETACH DELETE n")
+            sesion.run("MATCH (n) DETACH DELETE n").consume()
 
-            sesion.run("CREATE CONSTRAINT IF NOT EXISTS FOR (e:Estudiante) REQUIRE e.matricula IS UNIQUE")
-            sesion.run("CREATE CONSTRAINT IF NOT EXISTS FOR (m:Materia) REQUIRE m.codigo IS UNIQUE")
+            sesion.run(
+                "CREATE CONSTRAINT IF NOT EXISTS FOR (e:Estudiante) REQUIRE e.matricula IS UNIQUE"
+            ).consume()
+            sesion.run(
+                "CREATE CONSTRAINT IF NOT EXISTS FOR (m:Materia) REQUIRE m.codigo IS UNIQUE"
+            ).consume()
 
             for mat, nom, car, sem in estudiantes:
                 sesion.run(
                     "MERGE (e:Estudiante {matricula: $matricula}) "
                     "SET e.nombre = $nombre, e.carrera = $carrera, e.semestre = $semestre",
-                    matricula=mat, nombre=nom, carrera=car, semestre=sem,
-                )
+                    matricula=mat,
+                    nombre=nom,
+                    carrera=car,
+                    semestre=sem,
+                ).consume()
 
             for cod, nom in materias:
                 sesion.run(
                     "MERGE (m:Materia {codigo: $codigo}) SET m.nombre = $nombre",
-                    codigo=cod, nombre=nom,
-                )
+                    codigo=cod,
+                    nombre=nom,
+                ).consume()
 
             for mat, cod, calif, per in cursos:
                 sesion.run(
                     "MATCH (e:Estudiante {matricula: $matricula}), (m:Materia {codigo: $codigo}) "
                     "MERGE (e)-[r:CURSO {periodo: $periodo}]->(m) "
                     "SET r.calificacion = $calificacion",
-                    matricula=mat, codigo=cod, calificacion=calif, periodo=per,
-                )
+                    matricula=mat,
+                    codigo=cod,
+                    calificacion=calif,
+                    periodo=per,
+                ).consume()
 
             for m1, m2, proy in colaboraciones:
                 sesion.run(
                     "MATCH (e1:Estudiante {matricula: $m1}), (e2:Estudiante {matricula: $m2}) "
                     "MERGE (e1)-[:COLABORO_CON {proyecto: $proyecto}]->(e2)",
-                    m1=m1, m2=m2, proyecto=proy,
-                )
+                    m1=m1,
+                    m2=m2,
+                    proyecto=proy,
+                ).consume()
 
         print("Datos iniciales cargados correctamente.")
     except Exception as error:
+        import traceback
+        traceback.print_exc()
         print("Error al cargar datos iniciales:", error)
 
 

@@ -1,10 +1,18 @@
 let datosActuales = { estudiantes: [], materias: [], cursos: [], colaboraciones: [] };
 
-// Cambiar entre las pestanas de la pagina
+// Cambiar entre las pestanas de la interfaz
 function mostrarSeccion(id) {
     let secciones = document.getElementsByClassName("seccion");
     for (let i = 0; i < secciones.length; i++) {
         secciones[i].style.display = secciones[i].id === id ? "block" : "none";
+    }
+    let botones = document.getElementsByClassName("tab-btn");
+    for (let i = 0; i < botones.length; i++) {
+        botones[i].classList.remove("activo");
+    }
+    let btnActivo = document.getElementById("tab-" + id);
+    if (btnActivo) {
+        btnActivo.classList.add("activo");
     }
 }
 
@@ -12,8 +20,16 @@ function mostrarSeccion(id) {
 function mostrarMensaje(texto, esError) {
     let div = document.getElementById("mensaje");
     div.textContent = texto;
-    div.className = esError ? "mensaje error" : "mensaje";
+    div.className = esError ? "alerta error" : "alerta";
     div.style.display = "block";
+}
+
+// Etiqueta de color para la calificacion
+function badgeCalif(valor) {
+    let clase = "grade-low";
+    if (valor >= 9) clase = "grade-high";
+    else if (valor >= 7) clase = "grade-mid";
+    return '<span class="grade-pill ' + clase + '">' + valor + "</span>";
 }
 
 // Llenar las listas desplegables de estudiantes y materias
@@ -26,51 +42,73 @@ function llenarSelectores() {
 
     for (let i = 0; i < idsEst.length; i++) {
         let sel = document.getElementById(idsEst[i]);
+        let prev = sel.value;
         sel.innerHTML = "";
         for (let j = 0; j < datosActuales.estudiantes.length; j++) {
             let e = datosActuales.estudiantes[j];
             sel.innerHTML += '<option value="' + e.matricula + '">' + e.matricula + " - " + e.nombre + "</option>";
         }
+        if (prev) sel.value = prev;
     }
 
     for (let i = 0; i < idsMat.length; i++) {
         let sel = document.getElementById(idsMat[i]);
+        let prev = sel.value;
         sel.innerHTML = "";
         for (let j = 0; j < datosActuales.materias.length; j++) {
             let m = datosActuales.materias[j];
             sel.innerHTML += '<option value="' + m.codigo + '">' + m.codigo + " - " + m.nombre + "</option>";
         }
+        if (prev) sel.value = prev;
     }
 }
 
-// Llenar las 4 tablas HTML principales
+// Llenar las 4 tablas HTML principales y los contadores
 function llenarTablas() {
+    document.getElementById("cnt-est").textContent = datosActuales.estudiantes.length;
+    document.getElementById("cnt-mat").textContent = datosActuales.materias.length;
+    document.getElementById("cnt-cur").textContent = datosActuales.cursos.length;
+    document.getElementById("cnt-col").textContent = datosActuales.colaboraciones.length;
+
     let tEst = document.getElementById("tabla-estudiantes");
     tEst.innerHTML = "";
     for (let i = 0; i < datosActuales.estudiantes.length; i++) {
         let e = datosActuales.estudiantes[i];
-        tEst.innerHTML += "<tr><td>" + e.matricula + "</td><td>" + e.nombre + "</td><td>" + e.carrera + "</td><td>" + e.semestre + "</td></tr>";
+        tEst.innerHTML +=
+            '<tr><td><span class="code-chip">' + e.matricula + "</span></td>" +
+            "<td><b>" + e.nombre + "</b></td>" +
+            "<td>" + e.carrera + "</td>" +
+            "<td>" + e.semestre + "</td></tr>";
     }
 
     let tMat = document.getElementById("tabla-materias");
     tMat.innerHTML = "";
     for (let i = 0; i < datosActuales.materias.length; i++) {
         let m = datosActuales.materias[i];
-        tMat.innerHTML += "<tr><td>" + m.codigo + "</td><td>" + m.nombre + "</td></tr>";
+        tMat.innerHTML +=
+            '<tr><td><span class="code-chip">' + m.codigo + "</span></td>" +
+            "<td><b>" + m.nombre + "</b></td></tr>";
     }
 
     let tCur = document.getElementById("tabla-cursos");
     tCur.innerHTML = "";
     for (let i = 0; i < datosActuales.cursos.length; i++) {
         let c = datosActuales.cursos[i];
-        tCur.innerHTML += "<tr><td>" + c.estudiante + " (" + c.matricula + ")</td><td>" + c.materia + " (" + c.codigo + ")</td><td>" + c.calificacion + "</td><td>" + c.periodo + "</td></tr>";
+        tCur.innerHTML +=
+            "<tr><td>" + c.estudiante + ' <span class="code-chip">' + c.matricula + "</span></td>" +
+            "<td>" + c.materia + ' <span class="code-chip">' + c.codigo + "</span></td>" +
+            "<td>" + badgeCalif(c.calificacion) + "</td>" +
+            "<td>" + c.periodo + "</td></tr>";
     }
 
     let tCol = document.getElementById("tabla-colaboraciones");
     tCol.innerHTML = "";
     for (let i = 0; i < datosActuales.colaboraciones.length; i++) {
         let col = datosActuales.colaboraciones[i];
-        tCol.innerHTML += "<tr><td>" + col.estudiante1 + " (" + col.matricula1 + ")</td><td>" + col.estudiante2 + " (" + col.matricula2 + ")</td><td>" + col.proyecto + "</td></tr>";
+        tCol.innerHTML +=
+            "<tr><td>" + col.estudiante1 + "</td>" +
+            "<td>" + col.estudiante2 + "</td>" +
+            '<td><span class="badge badge-purple">' + col.proyecto + "</span></td></tr>";
     }
 }
 
@@ -83,9 +121,7 @@ async function cargarDatos() {
         return;
     }
     datosActuales = datos;
-    document.getElementById("estado").textContent = (
-        "Conectado a Neo4j AuraDB (" + datos.estudiantes.length + " estudiantes, " + datos.materias.length + " materias)"
-    );
+    document.getElementById("estado").textContent = "Neo4j AuraDB conectado";
     llenarSelectores();
     llenarTablas();
 }
@@ -107,22 +143,30 @@ async function verHistorial(e) {
     let res = await resp.json();
     let div = document.getElementById("res-historial");
     if (!res.ok) {
-        div.textContent = res.mensaje;
+        div.innerHTML = '<div class="res-empty">' + res.mensaje + "</div>";
         return;
     }
     let est = res.datos.estudiante;
-    let html = "<p><b>" + est.nombre + "</b> (" + est.matricula + ") - " + est.carrera + " - Semestre " + est.semestre + "</p>";
-    html += "<b>Materias cursadas (:CURSO):</b><ul>";
+    let html = '<div class="res-box">';
+    html += '<p class="res-title">' + est.nombre + ' <span class="code-chip">' + est.matricula + "</span> &mdash; " + est.carrera + " (Semestre " + est.semestre + ")</p>";
+    html += '<div class="hist-grid"><div><b>Materias cursadas (:CURSO)</b><ul class="hist-list">';
+    if (res.datos.cursos.length === 0) {
+        html += "<li>Sin cursos registrados</li>";
+    }
     for (let i = 0; i < res.datos.cursos.length; i++) {
         let c = res.datos.cursos[i];
-        html += "<li>" + c.codigo + " - " + c.materia + " | Calificacion: " + c.calificacion + " | Periodo: " + c.periodo + "</li>";
+        html += "<li><b>" + c.codigo + "</b> " + c.materia + " &middot; Calif: " + badgeCalif(c.calificacion) + " (" + c.periodo + ")</li>";
     }
-    html += "</ul><b>Colaboraciones (:COLABORO_CON):</b><ul>";
+    html += '</ul></div><div><b>Colaboraciones (:COLABORO_CON)</b><ul class="hist-list">';
+    if (res.datos.colaboraciones.length === 0) {
+        html += "<li>Sin colaboraciones registradas</li>";
+    }
     for (let i = 0; i < res.datos.colaboraciones.length; i++) {
         let col = res.datos.colaboraciones[i];
-        html += "<li>" + col.nombre + " (" + col.matricula + ") | Proyecto: " + col.proyecto + "</li>";
+        html += "<li><b>" + col.nombre + "</b> (" + col.matricula + ') &middot; <span class="badge badge-purple">' + col.proyecto + "</span></li>";
     }
-    div.innerHTML = html + "</ul>";
+    html += "</ul></div></div></div>";
+    div.innerHTML = html;
 }
 
 // Consulta especializada 1: recomendar asesores
@@ -134,16 +178,21 @@ async function buscarAsesores(e) {
     let res = await resp.json();
     let div = document.getElementById("res-asesores");
     if (!res.ok) {
-        div.textContent = res.mensaje;
+        div.innerHTML = '<div class="res-empty">' + res.mensaje + "</div>";
         return;
     }
-    let html = "<p><b>Asesores recomendados para " + res.datos.materia + ":</b></p>";
-    html += "<table><thead><tr><th>Estudiante</th><th>Sem.</th><th>Calif.</th><th>Conexion Previa</th></tr></thead><tbody>";
+    let html = '<div class="res-box"><p class="res-title">Asesores recomendados para ' + res.datos.materia + "</p>";
+    html += '<div class="table-wrap"><table><thead><tr><th>Estudiante</th><th>Sem.</th><th>Calif.</th><th>Conexion Previa</th></tr></thead><tbody>';
     for (let i = 0; i < res.datos.asesores.length; i++) {
         let a = res.datos.asesores[i];
-        html += "<tr><td>" + a.nombre + " (" + a.matricula + ")</td><td>" + a.semestre + "</td><td>" + a.calificacion + "</td><td>" + a.relacion_previa + "</td></tr>";
+        html +=
+            "<tr><td><b>" + a.nombre + '</b> <span class="code-chip">' + a.matricula + "</span></td>" +
+            "<td>" + a.semestre + "</td>" +
+            "<td>" + badgeCalif(a.calificacion) + "</td>" +
+            "<td>" + a.relacion_previa + "</td></tr>";
     }
-    div.innerHTML = html + "</tbody></table>";
+    html += "</tbody></table></div></div>";
+    div.innerHTML = html;
 }
 
 // Consulta especializada 2: camino mas corto con shortestPath
@@ -155,16 +204,23 @@ async function buscarCamino(e) {
     let res = await resp.json();
     let div = document.getElementById("res-camino");
     if (!res.ok) {
-        div.textContent = res.mensaje;
+        div.innerHTML = '<div class="res-empty">' + res.mensaje + "</div>";
         return;
     }
-    let html = "<p><b>Ruta de " + res.datos.origen_nombre + " a " + res.datos.destino_nombre + " (" + res.datos.saltos + " saltos):</b></p>";
-    html += "<table><thead><tr><th>Paso</th><th>Origen</th><th>Relacion</th><th>Destino</th></tr></thead><tbody>";
+    let html = '<div class="res-box"><p class="res-title">Ruta de ' + res.datos.origen_nombre + " a " + res.datos.destino_nombre + " (" + res.datos.saltos + " saltos)</p>";
+    html += '<div class="pasos-lista">';
     for (let i = 0; i < res.datos.pasos.length; i++) {
         let p = res.datos.pasos[i];
-        html += "<tr><td>" + p.numero + "</td><td>" + p.desde + "</td><td>" + p.relacion + "</td><td>" + p.hacia + "</td></tr>";
+        html +=
+            '<div class="paso-item">' +
+            '<span class="paso-num">Paso ' + p.numero + "</span>" +
+            '<span class="paso-nodo">' + p.desde + "</span>" +
+            '<span class="paso-rel">' + p.relacion + "</span>" +
+            '<span class="paso-nodo">' + p.hacia + "</span>" +
+            "</div>";
     }
-    div.innerHTML = html + "</tbody></table>";
+    html += "</div></div>";
+    div.innerHTML = html;
 }
 
 // Funcion auxiliar para enviar peticiones JSON a Flask
