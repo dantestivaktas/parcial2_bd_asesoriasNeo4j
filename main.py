@@ -103,7 +103,7 @@ def main():
                     print(msg)
 
             elif opcion == "7":
-                sub = input("1. Eliminar estudiante | 2. Dar de baja curso: ").strip()
+                sub = input("1. Eliminar estudiante | 2. Dar de baja curso | 3. Eliminar colaboracion: ").strip()
                 if sub == "1":
                     mat = input("Matricula: ")
                     _, msg = op.eliminar_estudiante(driver, mat)
@@ -113,6 +113,12 @@ def main():
                     cod = input("Codigo materia: ")
                     per = input("Periodo (opcional): ")
                     _, msg = op.eliminar_curso(driver, mat, cod, per)
+                    print(msg)
+                elif sub == "3":
+                    m1 = input("Matricula 1: ")
+                    m2 = input("Matricula 2: ")
+                    proy = input("Proyecto: ")
+                    _, msg = op.eliminar_colaboracion(driver, m1, m2, proy)
                     print(msg)
 
             elif opcion == "8":

@@ -290,6 +290,28 @@ def eliminar_curso(driver, matricula, codigo, periodo=""):
         return False, "Error al dar de baja curso: " + str(error)
 
 
+# Eliminar una relacion :COLABORO_CON especifica entre dos estudiantes
+def eliminar_colaboracion(driver, matricula1, matricula2, proyecto):
+    m1 = str(matricula1).strip()
+    m2 = str(matricula2).strip()
+    proyecto = str(proyecto).strip()
+    if not m1 or not m2 or not proyecto:
+        return False, "Matriculas y proyecto son obligatorios."
+
+    try:
+        consulta = (
+            "MATCH (e1:Estudiante {matricula: $m1})-[r:COLABORO_CON {proyecto: $proyecto}]-(e2:Estudiante {matricula: $m2}) "
+            "DELETE r RETURN e1.nombre AS est1, e2.nombre AS est2"
+        )
+        with driver.session(database=obtener_nombre_bd()) as sesion:
+            res = list(sesion.run(consulta, m1=m1, m2=m2, proyecto=proyecto))
+        if not res:
+            return False, "No se encontro esa colaboracion."
+        return True, "Colaboracion eliminada entre " + res[0]["est1"] + " y " + res[0]["est2"] + " (Proyecto: " + proyecto + ")"
+    except Exception as error:
+        return False, "Error al eliminar colaboracion: " + str(error)
+
+
 # Consulta especializada 1: recomendar asesores con calificacion >= 9
 def recomendar_asesores(driver, mi_matricula, codigo):
     matricula = str(mi_matricula).strip()

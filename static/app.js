@@ -135,7 +135,11 @@ async function cargarGrafo() {
 
 async function reiniciarSeed() {
     if (!confirm("Reiniciar la base con los datos iniciales?")) return;
-    let resp = await fetch("/api/seed", { method: "POST" });
+    let resp = await fetch("/api/seed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmar: true })
+    });
     let datos = await resp.json();
     rutaNodos = [];
     mostrarMensaje(datos.mensaje, !datos.ok);
@@ -277,6 +281,14 @@ function registrarCurso(e) {
 function registrarColab(e) {
     e.preventDefault();
     enviarJson("/api/colaboraciones", "POST", {
+        matricula1: document.getElementById("col-m1").value,
+        matricula2: document.getElementById("col-m2").value,
+        proyecto: document.getElementById("col-proy").value
+    });
+}
+
+function eliminarColab() {
+    enviarJson("/api/colaboraciones", "DELETE", {
         matricula1: document.getElementById("col-m1").value,
         matricula2: document.getElementById("col-m2").value,
         proyecto: document.getElementById("col-proy").value

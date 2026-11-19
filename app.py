@@ -1,3 +1,4 @@
+import os
 from flask import Flask, jsonify, render_template, request
 from conexion import conectar_bd, cerrar_bd
 from seed import cargar_datos_iniciales
@@ -39,9 +40,17 @@ def api_grafo():
     )
 
 
-# Reiniciar los datos iniciales en la nube
+# Reiniciar los datos iniciales en la nube (requiere confirmacion y token opcional)
 @app.route("/api/seed", methods=["POST"])
 def api_seed():
+    datos = request.get_json(silent=True) or {}
+    token_env = os.getenv("SEED_TOKEN", "").strip()
+    if token_env:
+        token_req = request.headers.get("X-Seed-Token", datos.get("token", "")).strip()
+        if token_req != token_env:
+            return jsonify({"ok": False, "mensaje": "Token de autorizacion invalido para reiniciar la base."}), 403
+    if datos.get("confirmar") is not True:
+        return jsonify({"ok": False, "mensaje": "Se requiere confirmar=true en el cuerpo JSON para reiniciar la base."}), 400
     cargar_datos_iniciales(get_driver())
     return jsonify({"ok": True, "mensaje": "Base reiniciada con datos iniciales."})
 
@@ -118,13 +127,19 @@ def api_cursos():
     return jsonify({"ok": ok, "mensaje": msg}), (200 if ok else 400)
 
 
-# Registrar colaboracion entre dos estudiantes
-@app.route("/api/colaboraciones", methods=["POST"])
+# Registrar o eliminar colaboracion entre dos estudiantes
+@app.route("/api/colaboraciones", methods=["POST", "DELETE"])
 def api_colaboraciones():
     datos = request.get_json() or {}
-    ok, msg = op.registrar_colaboracion(
-        get_driver(), datos.get("matricula1", ""), datos.get("matricula2", ""), datos.get("proyecto", "")
-    )
+    d = get_driver()
+    if request.method == "POST":
+        ok, msg = op.registrar_colaboracion(
+            d, datos.get("matricula1", ""), datos.get("matricula2", ""), datos.get("proyecto", "")
+        )
+    else:
+        ok, msg = op.eliminar_colaboracion(
+            d, datos.get("matricula1", ""), datos.get("matricula2", ""), datos.get("proyecto", "")
+        )
     return jsonify({"ok": ok, "mensaje": msg}), (200 if ok else 400)
 
 
