@@ -65,7 +65,7 @@ python main.py
 - `static/estilos.css`: Hoja de estilos limpia de la interfaz web.
 - `static/app.js`: Logica del frontend en JavaScript para consumir la API, renderizar el grafo y resaltar rutas `allShortestPaths`.
 - `conexion.py`: Carga las variables de entorno desde `.env`, inicializa el driver oficial de Neo4j, verifica la conectividad y cierra la sesion de forma segura.
-- `seed.py`: Script de carga inicial que limpia la base, define restricciones `UNIQUE` sobre `Estudiante.matricula`, `Materia.codigo`, `Carrera.nombre` y `Area.nombre`, e inserta los 6 estudiantes, 4 materias, 1 carrera, 4 areas, relaciones `:CURSO`, `:COLABORO_CON`, `:PERTENECE_A` y `:PERTENECE_AL_AREA` mediante transacciones `execute_write` parametrizadas.
+- `seed.py`: Script de carga inicial que limpia la base, define 4 restricciones `UNIQUE` (`Estudiante.matricula`, `Materia.codigo`, `Carrera.nombre` y `Area.nombre`) mas el indice de relacion `idx_curso_calificacion` sobre `:CURSO(calificacion)`, e inserta los 6 estudiantes, 4 materias, 1 carrera, 4 areas, relaciones `:CURSO`, `:COLABORO_CON`, `:PERTENECE_A` y `:PERTENECE_AL_AREA` mediante transacciones `execute_write` parametrizadas.
 - `operaciones.py`: Capa compartida de acceso a Neo4j con las operaciones CRUD completas (sin sobrescribir cursos de periodos anteriores ni colaboraciones de proyectos distintos) y las dos consultas especializadas de grafos.
 - `main.py`: Interfaz de consola alternativa con menu numerado para ejecutar cada operacion contra Neo4j AuraDB.
 - `requirements.txt`: Lista de dependencias del proyecto (`neo4j`, `python-dotenv` y `flask`).

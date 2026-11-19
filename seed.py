@@ -7,6 +7,7 @@ def _crear_esquema(tx):
     tx.run("CREATE CONSTRAINT IF NOT EXISTS FOR (m:Materia) REQUIRE m.codigo IS UNIQUE")
     tx.run("CREATE CONSTRAINT IF NOT EXISTS FOR (c:Carrera) REQUIRE c.nombre IS UNIQUE")
     tx.run("CREATE CONSTRAINT IF NOT EXISTS FOR (a:Area) REQUIRE a.nombre IS UNIQUE")
+    tx.run("CREATE INDEX idx_curso_calificacion IF NOT EXISTS FOR ()-[r:CURSO]-() ON (r.calificacion)")
 
 
 def _insertar_datos(tx, estudiantes, materias, cursos, colaboraciones):

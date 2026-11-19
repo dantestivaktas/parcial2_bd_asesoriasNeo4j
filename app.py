@@ -147,20 +147,24 @@ def api_colaboraciones():
 # Consulta 1: recomendar asesores por vecindad
 @app.route("/api/asesores", methods=["GET"])
 def api_asesores():
-    ok, msg, datos = op.recomendar_asesores(
-        get_driver(), request.args.get("matricula", ""), request.args.get("codigo", "")
-    )
-    return jsonify({"ok": ok, "mensaje": msg, "datos": datos}), (200 if ok else 400)
+    mat = request.args.get("matricula", "").strip()
+    cod = request.args.get("codigo", "").strip()
+    if not mat or not cod:
+        return jsonify({"ok": False, "encontrado": False, "mensaje": "Matricula y codigo son obligatorios.", "datos": None}), 400
+    ok, msg, datos = op.recomendar_asesores(get_driver(), mat, cod)
+    return jsonify({"ok": ok, "encontrado": ok, "mensaje": msg, "datos": datos}), 200
 
 
 # Consulta 2: camino mas corto entre dos estudiantes
 @app.route("/api/camino", methods=["GET"])
 def api_camino():
+    orig = request.args.get("origen", "").strip()
+    dest = request.args.get("destino", "").strip()
+    if not orig or not dest or orig == dest:
+        return jsonify({"ok": False, "encontrado": False, "mensaje": "Origen y destino validos y distintos son obligatorios.", "datos": None}), 400
     incluir = request.args.get("incluir_materias", "0") == "1"
-    ok, msg, datos = op.buscar_camino_mas_corto(
-        get_driver(), request.args.get("origen", ""), request.args.get("destino", ""), incluir
-    )
-    return jsonify({"ok": ok, "mensaje": msg, "datos": datos}), (200 if ok else 400)
+    ok, msg, datos = op.buscar_camino_mas_corto(get_driver(), orig, dest, incluir)
+    return jsonify({"ok": ok, "encontrado": ok, "mensaje": msg, "datos": datos}), 200
 
 
 if __name__ == "__main__":
