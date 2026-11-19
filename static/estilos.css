@@ -52,11 +52,8 @@ main {
     margin-top: 0;
 }
 
-#grafo {
-    width: 100%;
-    height: auto;
-    border: 1px solid #ddd;
-    background: #fafafa;
+.peligro {
+    background-color: #c0392b;
 }
 
 .menu-tabs {
