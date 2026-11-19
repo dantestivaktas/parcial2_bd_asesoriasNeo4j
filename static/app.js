@@ -230,10 +230,35 @@ function crearEstudiante(e) {
     });
 }
 
+function actualizarEstudiante() {
+    let mat = document.getElementById("est-mat").value.trim();
+    if (!mat) {
+        mostrarMensaje("Ingresa la matricula del estudiante a actualizar.", true);
+        return;
+    }
+    enviarJson("/api/estudiantes/" + encodeURIComponent(mat), "PUT", {
+        nombre: document.getElementById("est-nom").value,
+        carrera: document.getElementById("est-car").value,
+        semestre: document.getElementById("est-sem").value
+    });
+}
+
 function crearMateria(e) {
     e.preventDefault();
     enviarJson("/api/materias", "POST", {
         codigo: document.getElementById("mat-cod").value,
+        nombre: document.getElementById("mat-nom").value,
+        area: document.getElementById("mat-area").value
+    });
+}
+
+function actualizarMateria() {
+    let cod = document.getElementById("mat-cod").value.trim();
+    if (!cod) {
+        mostrarMensaje("Ingresa el codigo de la materia a actualizar.", true);
+        return;
+    }
+    enviarJson("/api/materias/" + encodeURIComponent(cod), "PUT", {
         nombre: document.getElementById("mat-nom").value,
         area: document.getElementById("mat-area").value
     });

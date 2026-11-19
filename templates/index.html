@@ -94,7 +94,7 @@
         <section id="sec-crud" class="seccion" style="display:none;">
             <div class="dos-cols">
                 <div class="caja">
-                    <h3>Crear Estudiante</h3>
+                    <h3>Crear o Actualizar Estudiante</h3>
                     <form onsubmit="crearEstudiante(event)">
                         <label>Matricula:</label>
                         <input id="est-mat" placeholder="00548299" required>
@@ -104,12 +104,15 @@
                         <input id="est-car" value="Ingenieria en TI" required>
                         <label>Semestre:</label>
                         <input id="est-sem" type="number" value="5" required>
-                        <button type="submit">Guardar Estudiante</button>
+                        <div class="linea">
+                            <button type="submit">Crear (POST)</button>
+                            <button type="button" onclick="actualizarEstudiante()">Actualizar (PUT)</button>
+                        </div>
                     </form>
                 </div>
 
                 <div class="caja">
-                    <h3>Crear Materia</h3>
+                    <h3>Crear o Actualizar Materia</h3>
                     <form onsubmit="crearMateria(event)">
                         <label>Codigo:</label>
                         <input id="mat-cod" placeholder="IA205" required>
@@ -117,7 +120,10 @@
                         <input id="mat-nom" placeholder="Inteligencia Artificial" required>
                         <label>Area:</label>
                         <input id="mat-area" placeholder="Datos" required>
-                        <button type="submit">Guardar Materia</button>
+                        <div class="linea">
+                            <button type="submit">Crear (POST)</button>
+                            <button type="button" onclick="actualizarMateria()">Actualizar (PUT)</button>
+                        </div>
                     </form>
                 </div>
 

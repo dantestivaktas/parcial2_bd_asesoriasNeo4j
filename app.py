@@ -46,14 +46,24 @@ def api_seed():
     return jsonify({"ok": True, "mensaje": "Base reiniciada con datos iniciales."})
 
 
-# Crear o actualizar estudiante
+# Crear estudiante nuevo
 @app.route("/api/estudiantes", methods=["POST"])
 def api_crear_estudiante():
     datos = request.get_json() or {}
     ok, msg = op.crear_estudiante(
         get_driver(), datos.get("matricula", ""), datos.get("nombre", ""), datos.get("carrera", ""), datos.get("semestre", "")
     )
-    return jsonify({"ok": ok, "mensaje": msg}), (200 if ok else 400)
+    return jsonify({"ok": ok, "mensaje": msg}), (201 if ok else 400)
+
+
+# Actualizar datos completos de un estudiante
+@app.route("/api/estudiantes/<matricula>", methods=["PUT"])
+def api_actualizar_estudiante(matricula):
+    datos = request.get_json() or {}
+    ok, msg = op.actualizar_estudiante(
+        get_driver(), matricula, datos.get("nombre", ""), datos.get("carrera", ""), datos.get("semestre", "")
+    )
+    return jsonify({"ok": ok, "mensaje": msg}), (200 if ok else 404)
 
 
 # Actualizar semestre de un estudiante
@@ -78,12 +88,20 @@ def api_historial(matricula):
     return jsonify({"ok": ok, "mensaje": msg, "datos": datos}), (200 if ok else 404)
 
 
-# Crear o actualizar materia
+# Crear materia nueva
 @app.route("/api/materias", methods=["POST"])
 def api_crear_materia():
     datos = request.get_json() or {}
     ok, msg = op.crear_materia(get_driver(), datos.get("codigo", ""), datos.get("nombre", ""), datos.get("area", ""))
-    return jsonify({"ok": ok, "mensaje": msg}), (200 if ok else 400)
+    return jsonify({"ok": ok, "mensaje": msg}), (201 if ok else 400)
+
+
+# Actualizar datos de una materia existente
+@app.route("/api/materias/<codigo>", methods=["PUT"])
+def api_actualizar_materia(codigo):
+    datos = request.get_json() or {}
+    ok, msg = op.actualizar_materia(get_driver(), codigo, datos.get("nombre", ""), datos.get("area", ""))
+    return jsonify({"ok": ok, "mensaje": msg}), (200 if ok else 404)
 
 
 # Registrar, actualizar o dar de baja un curso

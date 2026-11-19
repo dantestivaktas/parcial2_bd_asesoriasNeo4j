@@ -1,7 +1,8 @@
+from neo4j.exceptions import ConstraintError
 from conexion import obtener_nombre_bd
 
 
-# Crear o actualizar un estudiante por matricula
+# Crear un estudiante nuevo sin sobrescribir registros existentes
 def crear_estudiante(driver, matricula, nombre, carrera, semestre):
     matricula = str(matricula).strip()
     nombre = str(nombre).strip()
@@ -12,18 +13,43 @@ def crear_estudiante(driver, matricula, nombre, carrera, semestre):
     try:
         semestre = int(semestre)
         consulta = (
-            "MERGE (e:Estudiante {matricula: $matricula}) "
+            "CREATE (e:Estudiante {matricula: $matricula, nombre: $nombre, carrera: $carrera, semestre: $semestre}) "
+            "RETURN e.nombre AS nombre"
+        )
+        with driver.session(database=obtener_nombre_bd()) as sesion:
+            res = sesion.run(consulta, matricula=matricula, nombre=nombre, carrera=carrera, semestre=semestre).single()
+        return True, "Estudiante creado: " + res["nombre"] + " (" + matricula + ")"
+    except ConstraintError:
+        return False, "Ya existe un estudiante con la matricula " + matricula + "."
+    except Exception as error:
+        return False, "Error al crear estudiante: " + str(error)
+
+
+# Actualizar datos de un estudiante existente
+def actualizar_estudiante(driver, matricula, nombre, carrera, semestre):
+    matricula = str(matricula).strip()
+    nombre = str(nombre).strip()
+    carrera = str(carrera).strip()
+    if not matricula or not nombre or not carrera:
+        return False, "Matricula, nombre y carrera son obligatorios."
+
+    try:
+        semestre = int(semestre)
+        consulta = (
+            "MATCH (e:Estudiante {matricula: $matricula}) "
             "SET e.nombre = $nombre, e.carrera = $carrera, e.semestre = $semestre "
             "RETURN e.nombre AS nombre"
         )
         with driver.session(database=obtener_nombre_bd()) as sesion:
             res = sesion.run(consulta, matricula=matricula, nombre=nombre, carrera=carrera, semestre=semestre).single()
-        return True, "Estudiante guardado: " + res["nombre"] + " (" + matricula + ")"
+        if not res:
+            return False, "No se encontro el estudiante."
+        return True, "Estudiante actualizado: " + res["nombre"] + " (" + matricula + ")"
     except Exception as error:
-        return False, "Error al guardar estudiante: " + str(error)
+        return False, "Error al actualizar estudiante: " + str(error)
 
 
-# Crear o actualizar una materia por codigo
+# Crear una materia nueva sin sobrescribir registros existentes
 def crear_materia(driver, codigo, nombre, area):
     codigo = str(codigo).strip().upper()
     nombre = str(nombre).strip()
@@ -33,15 +59,39 @@ def crear_materia(driver, codigo, nombre, area):
 
     try:
         consulta = (
-            "MERGE (m:Materia {codigo: $codigo}) "
+            "CREATE (m:Materia {codigo: $codigo, nombre: $nombre, area: $area}) "
+            "RETURN m.nombre AS nombre"
+        )
+        with driver.session(database=obtener_nombre_bd()) as sesion:
+            res = sesion.run(consulta, codigo=codigo, nombre=nombre, area=area).single()
+        return True, "Materia creada: " + codigo + " - " + res["nombre"]
+    except ConstraintError:
+        return False, "Ya existe una materia con el codigo " + codigo + "."
+    except Exception as error:
+        return False, "Error al crear materia: " + str(error)
+
+
+# Actualizar datos de una materia existente
+def actualizar_materia(driver, codigo, nombre, area):
+    codigo = str(codigo).strip().upper()
+    nombre = str(nombre).strip()
+    area = str(area).strip()
+    if not codigo or not nombre or not area:
+        return False, "Codigo, nombre y area son obligatorios."
+
+    try:
+        consulta = (
+            "MATCH (m:Materia {codigo: $codigo}) "
             "SET m.nombre = $nombre, m.area = $area "
             "RETURN m.nombre AS nombre"
         )
         with driver.session(database=obtener_nombre_bd()) as sesion:
             res = sesion.run(consulta, codigo=codigo, nombre=nombre, area=area).single()
-        return True, "Materia guardada: " + codigo + " - " + res["nombre"]
+        if not res:
+            return False, "No se encontro la materia."
+        return True, "Materia actualizada: " + codigo + " - " + res["nombre"]
     except Exception as error:
-        return False, "Error al guardar materia: " + str(error)
+        return False, "Error al actualizar materia: " + str(error)
 
 
 # Registrar materia cursada diferenciada por periodo para no borrar intentos previos
@@ -81,10 +131,14 @@ def registrar_colaboracion(driver, matricula1, matricula2, proyecto):
     if m1 == m2:
         return False, "Los estudiantes deben ser diferentes."
 
+    # Ordenar matriculas y usar MERGE sin direccion para evitar duplicados inversos
+    if m1 > m2:
+        m1, m2 = m2, m1
+
     try:
         consulta = (
             "MATCH (e1:Estudiante {matricula: $m1}), (e2:Estudiante {matricula: $m2}) "
-            "MERGE (e1)-[:COLABORO_CON {proyecto: $proyecto}]->(e2) "
+            "MERGE (e1)-[:COLABORO_CON {proyecto: $proyecto}]-(e2) "
             "RETURN e1.nombre AS n1, e2.nombre AS n2"
         )
         with driver.session(database=obtener_nombre_bd()) as sesion:
